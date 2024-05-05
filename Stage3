@@ -1,0 +1,45 @@
+pipeline {
+    agent none
+    
+    environment {
+        DOCKERHUB_CREDENTIALS = credentials('6ecf3067-7924-4ce1-b154-674fce329aa4')
+    }
+
+    stages {
+        stage('Git') {
+            agent { 
+                label 'Master'
+            }
+            steps {
+                sh 'git clone https://github.com/rushtoaksith/Shark1.git'
+            }
+        }
+        
+        stage('Docker') {
+            agent { 
+                label 'Master'
+            }
+            steps {
+                sh 'sudo apt install docker.io -y'
+                sh 'sudo docker build /home/ubuntu/jenkins/workspace/Deploy/Shark1/. -t docker6767/24febdevsecops'
+                sh 'sudo curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sudo sh -s -- -b /usr/local/bin'
+                sh 'sudo trivy image docker6767/24febdevsecops --scanners vuln > image_report.txt' 
+                sh 'sudo echo $DOCKERHUB_CREDENTIALS_PSW | sudo docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin'
+                sh 'sudo docker push docker6767/24febdevsecops'
+            }
+        }
+        
+        stage('K8s') {
+            agent { 
+                label 'Master'
+            }
+            steps {
+                // Install kube-bench
+                sh 'sudo docker run --rm -v `pwd`:/host docker.io/aquasec/kube-bench:latest install'
+                sh 'sudo ./kube-bench > kubernetesbench.txt'
+                sh 'kubectl apply -f /home/ubuntu/jenkins/workspace/Deploy/Shark1/deploy.yaml'
+                sh 'kubectl apply -f /home/ubuntu/jenkins/workspace/Deploy/Shark1/service.yaml'
+            }
+        }        
+    }
+}
