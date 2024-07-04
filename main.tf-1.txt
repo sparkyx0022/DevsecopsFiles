@@ -7,9 +7,9 @@ provider "aws" {
 resource "aws_instance" "k8-M" {
   ami           = "ami-0da7657fe73215c0c"
   instance_type = "t2.large"  
-  key_name      = "Aksith-Don't delete"
+  key_name      = "Demo"
   tags = {
-    Name = "KMASTER"
+    Name = "K8s Master"
   }
 
   root_block_device {
@@ -20,8 +20,8 @@ resource "aws_instance" "k8-M" {
 resource "aws_instance" "k8-S1" {
   ami           = "ami-0da7657fe73215c0c"
   instance_type = "t2.medium"
-  key_name      = "Aksith-Don't delete"
+  key_name      = "Demo"
   tags = {
-    Name = "KSlave"
+    Name = "K8s Slave"
   }
 }
